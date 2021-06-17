@@ -13,3 +13,4 @@ npm install mysql
 4. https://eecs.oregonstate.edu/ecampus-video/CS290/core-content/node-mysql/using-server-sql.html
 5. https://learnsql.com/blog/how-to-join-two-tables-in-sql/
 6. https://www.w3schools.com/nodejs/nodejs_mysql_join.asp
+7. https://learnsql.com/blog/how-to-join-3-tables-or-more-in-sql/

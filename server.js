@@ -26,7 +26,7 @@ function start(){
         choices: [
             "Add departments, roles, employees",
             "View departments, roles, employees",
-            "Update employee roles",
+            "Update employee role",
             "Exit"
         ]
 
@@ -39,7 +39,7 @@ function start(){
             case "View departments, roles, employees":
                 viewFunction();
                 break;
-            case "Update employee roles":
+            case "Update employee role":
                 updateFunction();
                 break;
             case "Exit":
@@ -104,6 +104,7 @@ async function addRole(){
         if(err) throw err;
 
         let departments = res;
+        console.log("-----REFERENCE TABLE-----".magenta);
         console.table(departments);
         //just doing res.id throws undefined. Need to specify the index of the value you are wanting to retrieve.
         // let deptid = res[0].id;
@@ -157,6 +158,7 @@ async function addEmployee(){
     if(err) throw err;
 
     let roleDisplay = res;
+    console.log("-----REFERENCE TABLE-----".magenta);
     console.table(roleDisplay);
 
     let rolesid = [];
@@ -173,6 +175,7 @@ async function addEmployee(){
 
         let managerDisplay = res2;
         // console.log(res2);
+        console.log("-----REFERENCE TABLE-----".magenta);
         console.table(managerDisplay);
 
         let managerid = [0];
@@ -210,7 +213,7 @@ async function addEmployee(){
           connection.query("INSERT INTO employee SET ?", answer,
           (err) => {
             if (err) throw err;
-            console.log('Your role was created successfully!');
+            console.log('Your employee was created successfully!');
             // re-prompt the user 
             start();
            });
@@ -219,6 +222,102 @@ async function addEmployee(){
     );
   });
 };
+
+
+//Create the main function that will allow a user to view the different tables:
+async function viewFunction(){
+  await inquirer.prompt([{
+      type: "list",
+      name: "viewing",
+      message: "What do you want to view?",
+      choices: ["Departments", "Roles", "Employees"]
+    }
+  ]).then(({viewing}) => {
+      switch(viewing){
+          case "Departments":
+              connection.query("SELECT * FROM department", function(err,res){
+                if(err) throw err;
+                console.table(res);
+                start();
+              });
+              break;
+          case "Roles":
+              connection.query("SELECT * FROM role JOIN department ON (role.department_id = department.id)", function(err,res){
+                if(err) throw err;
+                console.table(res);
+                start();
+              });
+              break;
+          case "Employees":
+              connection.query("SELECT employee.id, employee.first_name, employee.last_name, employee.manager_id, role.title, department.department_name FROM employee JOIN role ON (employee.role_id = role.id) JOIN department ON (role.department_id = department.id)", 
+              function(err,res){
+                if(err) throw err;
+                console.table(res);
+                start();
+              });
+              break;
+          }
+      }
+  );
+};
+
+//Create the main function where the employee's role can be updated:
+async function updateFunction(){
+  await inquirer.prompt([
+    {
+      name: 'last_name',
+      type: 'input',
+      message: "What is the employee's last name?",
+  },
+  ]).then((answer) => {
+    // console.log(answer.last_name);
+    connection.query("SELECT employee.id, employee.first_name, employee.last_name, employee.role_id, role.title FROM employee JOIN role ON (employee.role_id = role.id) WHERE ?",
+    {last_name: answer.last_name}, function(err,res){
+      
+      if(err) throw err;
+      //Display a table of all the employees with that last name, their unique id, and their current role for reference:
+      console.log("-----EMPLOYEE REFERENCE TABLE-----".magenta);
+      console.table(res);
+      //Create an array to hold all the employee ids for the user to choose which one to change:
+      let personid = [];
+      for(i=0; i<res.length; i++){
+        personid.push(res[i].id);
+      }
+      //Create a second connection to reference all available roles:
+      connection.query("SELECT id, title, department_id FROM role", async function(err,res){
+        if(err) throw err;
+
+        let roleDisplay = res;
+        console.log("-----ROLE REFERENCE TABLE-----".magenta);
+        console.table(roleDisplay);
+
+        //Create a second inquirer prompt to take in the id of the person to be updated:
+        await inquirer.prompt([
+          {
+            name: 'id',
+            type: 'list',
+            message: "What is the employee's ID?",
+            choices: personid,
+          },
+          {
+            name: "role_id",
+            type: "input",
+            message: "What is the new role ID for this employee?"
+          },
+          ]).then((answer2) => {
+            connection.query("UPDATE employee SET ? WHERE ?",[{role_id: parseInt(answer2.role_id)}, {id: parseInt(answer2.id)}], 
+            async function(error, res){
+              if(error) throw error;
+              console.log("Employee Updated!");
+              start();
+            });
+          });
+      });
+    });
+  });
+
+};
+
 
 // connect to the mysql server and sql database
 connection.connect((err) => {
