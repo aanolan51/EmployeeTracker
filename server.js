@@ -1,6 +1,7 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
 const consoleTable = require('console.table');
+const colors = require('colors');
 
 // create the connection information for the sql database
 const connection = mysql.createConnection({
@@ -13,14 +14,14 @@ const connection = mysql.createConnection({
   user: 'root',
 
   // Enter your password:
-  password: '',
+  password: 'unicorn',
   database: 'employee_trackerDB',
 });
 
 function start(){
     inquirer.prompt({
-        type: list,
-        name: menuOption,
+        type: "list",
+        name: "menuOption",
         message: "What would you like to do?",
         choices: [
             "Add departments, roles, employees",
@@ -48,16 +49,186 @@ function start(){
     })
 };
 
-function addFunction(){
-
+//Function that will handle the different switch cases for what the user wants to add to the database:
+async function addFunction(){
+    await inquirer.prompt([{
+        type: "list",
+        name: "adding",
+        message: "What do you want to add?",
+        choices: ["Department", "Role", "Employee"]
+      }
+    ]).then(({adding}) => {
+        switch(adding){
+            case "Department":
+                addDept();
+                break;
+            case "Role":
+                addRole();
+                break;
+            case "Employee":
+                addEmployee();
+                break;
+            }
+        }
+    );
 };
 
+//Function that handles adding in a new department to the database:
+async function addDept(){
+    // prompt for info about the item being put up for auction
+    await inquirer.prompt([
+        {
+          name: 'department_name',
+          type: 'input',
+          message: 'What is the Department name?',
+        },
+      ])
+      .then((answer) => {
+        // when finished prompting, insert a new item into the db with that info
+        connection.query('INSERT INTO department SET ?', answer ,
+          (err) => {
+            if (err) throw err;
+            console.log('Your Department was created successfully!');
+            // re-prompt the user 
+            start();
+          }
+        );
+      });
+  };
+
+
+//Function to add the Role to the table:
+async function addRole(){
+  //First need to select the department table and display it, so the user has a reference for the department_id:
+    connection.query("SELECT * FROM department", async function(err, res){
+        if(err) throw err;
+
+        let departments = res;
+        console.table(departments);
+        //just doing res.id throws undefined. Need to specify the index of the value you are wanting to retrieve.
+        // let deptid = res[0].id;
+        // console.log(deptid);
+        let depts = [];
+        //need to create a loop, and push each item to an array in order to set it equal to a useable variable to use as the choices.
+        for(i=0; i<res.length; i++){
+          depts.push(res[i].id);
+        };
+        // console.log(depts);
+
+        // Inside the first connection, begin to prompt the user for input about the role, and then add this to the role table:
+    await inquirer.prompt([
+        {
+          name: 'title',
+          type: 'input',
+          message: 'What is the Role title?',
+        },
+        {
+            name: 'salary',
+            type: 'input',
+            message: 'What is the salary for the Role?',
+        },
+        {
+            name: 'department_id',
+            type: 'list',
+            message: 'What is the department the role is in?',
+            choices: depts,
+        },
+      ])
+      .then((answer) => {
+        // when finished prompting, insert a new item into the db with that info. Can use just "answer" because the prompt names
+        //match exacty with the db column names. Re-loops to the start menu of questions.
+        connection.query('INSERT INTO role SET ?', answer ,
+          (err) => {
+            if (err) throw err;
+            console.log('Your role was created successfully!');
+            // re-prompt the user 
+            start();
+          }
+        );
+      });
+    });
+   
+  };
+
+//Function to add an employee to the database:
+async function addEmployee(){
+  //First select the role that the employee has, display the table so the user has a reference to role_id:
+  connection.query("SELECT id, title, department_id FROM role", async function(err,res){
+    if(err) throw err;
+
+    let roleDisplay = res;
+    console.table(roleDisplay);
+
+    let rolesid = [];
+    for(i=0; i<res.length; i++){
+      rolesid.push(res[i].id);
+    };
+
+    //Now have another connection.query to select all the managers and display/capture their ids:
+    //Join the role and employee tables, and sort on manager role:
+    connection.query("SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee JOIN role ON (employee.role_id = role.id) WHERE (role.title = 'manager' OR role.title = 'Manager')",
+      async function(err, res2){
+        if(err) throw err;
+        // console.log("Made it to the second query")
+
+        let managerDisplay = res2;
+        // console.log(res2);
+        console.table(managerDisplay);
+
+        let managerid = [0];
+        for(i=0; i<res2.length; i++){
+          managerid.push(res2[i].id);
+        }
+        // console.log(managerid);
+
+        //Prompt to add employees:
+        await inquirer.prompt([
+          {
+            name: 'first_name',
+            type: 'input',
+            message: "What is the employee's first name?",
+          },
+          {
+              name: 'last_name',
+              type: 'input',
+              message: "What is the employee's last name?",
+          },
+          {
+              name: 'role_id',
+              type: 'list',
+              message: 'What role does this employee have? Choose the role id from the reference table above:',
+              choices: rolesid,
+          },
+          {
+            name: 'manager_id',
+            type: 'list',
+            message: "What manager does this employee have? Choose the manager's id or use 0 if no manager:",
+            choices: managerid,
+        },
+
+        ]).then((answer) =>{
+          connection.query("INSERT INTO employee SET ?", answer,
+          (err) => {
+            if (err) throw err;
+            console.log('Your role was created successfully!');
+            // re-prompt the user 
+            start();
+           });
+        });
+
+      }    
+    );
+  });
+
+};
 
 // connect to the mysql server and sql database
 connection.connect((err) => {
     if (err) throw err;
     //Create the graphic for the main menu:
-    console.log("Welcome!")
+    console.log("--------".grey)
+    console.log("Welcome!".magenta)
+    console.log("--------".grey)
     // run the start function after the connection is made:
     start();
 });

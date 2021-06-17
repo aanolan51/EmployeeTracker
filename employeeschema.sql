@@ -5,7 +5,7 @@ USE employee_trackerDB;
 --This is the main/parent table. The id created here will need to be referenced in the other tables in order to link them--
 CREATE TABLE department (
   id INT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(30) NULL,
+  department_name VARCHAR(30) NULL,
   PRIMARY KEY (id)
 );
 --This table will still have it's own id, but will need to reference the id of the department the role will belong to.--
@@ -32,6 +32,5 @@ CREATE TABLE employee (
   role_id INT NULL,
   manager_id INT NULL,
   PRIMARY KEY (id),
-  FOREIGN KEY (role_id) REFERENCES role(id),
-  FOREIGN KEY (manager_id) REFERENCES employee(id)
+  FOREIGN KEY (role_id) REFERENCES role(id)
 );

@@ -1,0 +1,27 @@
+{
+  "name": "EmployeeTracker",
+  "version": "1.0.0",
+  "description": "1. https://www.springboard.com/blog/data-science/joining-data-tables/\r 2. https://www.khanacademy.org/computer-programming/sql-create-table-with-foreign-key-reference/4700108318965760\r 3. https://dev.mysql.com/doc/mysql-tutorial-excerpt/5.7/en/example-foreign-keys.html",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aanolan51/EmployeeTracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aanolan51/EmployeeTracker/issues"
+  },
+  "homepage": "https://github.com/aanolan51/EmployeeTracker#readme",
+  "dependencies": {
+    "colors": "^1.4.0",
+    "console.table": "^0.10.0",
+    "inquirer": "^8.1.1",
+    "mysql": "^2.18.1"
+  }
+}
