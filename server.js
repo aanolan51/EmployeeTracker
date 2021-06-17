@@ -215,11 +215,9 @@ async function addEmployee(){
             start();
            });
         });
-
       }    
     );
   });
-
 };
 
 // connect to the mysql server and sql database
