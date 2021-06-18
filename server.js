@@ -154,11 +154,11 @@ async function addRole(){
 //Function to add an employee to the database:
 async function addEmployee(){
   //First select the role that the employee has, display the table so the user has a reference to role_id:
-  connection.query("SELECT id, title, department_id FROM role", async function(err,res){
+  connection.query("SELECT role.id, role.title, department.department_name FROM role JOIN department ON (role.department_id = department.id)", async function(err,res){
     if(err) throw err;
 
     let roleDisplay = res;
-    console.log("-----REFERENCE TABLE-----".magenta);
+    console.log("---------ROLE REFERENCE TABLE----------".magenta);
     console.table(roleDisplay);
 
     let rolesid = [];
@@ -168,14 +168,14 @@ async function addEmployee(){
 
     //Now have another connection.query to select all the managers and display/capture their ids:
     //Join the role and employee tables, and sort on manager role:
-    connection.query("SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee JOIN role ON (employee.role_id = role.id) WHERE (role.title = 'manager' OR role.title = 'Manager')",
+    connection.query("SELECT employee.id, employee.first_name, employee.last_name, role.title, department.department_name FROM employee JOIN role ON (employee.role_id = role.id) JOIN department ON (role.department_id = department.id) WHERE (role.title = 'manager' OR role.title = 'Manager' OR role.title = 'President')",
       async function(err, res2){
         if(err) throw err;
         // console.log("Made it to the second query")
 
         let managerDisplay = res2;
         // console.log(res2);
-        console.log("-----REFERENCE TABLE-----".magenta);
+        console.log("----------MANAGER REFERENCE TABLE----------".magenta);
         console.table(managerDisplay);
 
         let managerid = [0];
@@ -237,6 +237,7 @@ async function viewFunction(){
           case "Departments":
               connection.query("SELECT * FROM department", function(err,res){
                 if(err) throw err;
+                console.log("----------DEPARTMENT TABLE----------".green);
                 console.table(res);
                 start();
               });
@@ -244,6 +245,7 @@ async function viewFunction(){
           case "Roles":
               connection.query("SELECT * FROM role JOIN department ON (role.department_id = department.id)", function(err,res){
                 if(err) throw err;
+                console.log("----------ROLES TABLE----------".green)
                 console.table(res);
                 start();
               });
@@ -252,6 +254,7 @@ async function viewFunction(){
               connection.query("SELECT employee.id, employee.first_name, employee.last_name, employee.manager_id, role.title, department.department_name FROM employee JOIN role ON (employee.role_id = role.id) JOIN department ON (role.department_id = department.id)", 
               function(err,res){
                 if(err) throw err;
+                console.log("----------EMPLOYEES TABLE----------".green)
                 console.table(res);
                 start();
               });
